@@ -29,6 +29,10 @@ pipeline {
                 npm run build || { echo "Build failed!"; exit 1; }
                 '''
             }
+
+             steps {
+        echo "No package.json found, skipping build step."
+            }
         }
 
         stage('Deploy to Server') {
