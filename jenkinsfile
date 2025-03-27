@@ -18,18 +18,17 @@ pipeline {
             }
         }
 
-        Uncomment if build is needed
-         stage('Install Dependencies & Build') {
-             steps {
-                 sh '''
-                 cd $WORKSPACE/Prod
-                 rm -rf node_modules package-lock.json
-                 npm cache clean --force
-                 npm install 
-                 npm run build || { echo "Build failed!"; exit 1; }
-                 '''
-        //     }
-        // }
+        stage('Install Dependencies & Build') {
+            steps {
+                sh '''
+                cd $WORKSPACE/Prod
+                rm -rf node_modules package-lock.json
+                npm cache clean --force
+                npm install 
+                npm run build || { echo "Build failed!"; exit 1; }
+                '''
+            }
+        }
 
         stage('Deploy to Server') {
             steps {
@@ -39,7 +38,7 @@ pipeline {
 
                     # Securely copy files using rsync
                     rsync -Paz -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" $WORKSPACE/ \
-                    ${SERVER_USER}@${SERVER_IP}:${REACT_APP_DIR} --rsync-path="sudo rsync"\
+                    ${SERVER_USER}@${SERVER_IP}:${REACT_APP_DIR} --rsync-path="sudo rsync" \
                     --exclude=test --exclude=logs --exclude=deployment-scripts --exclude=keys --exclude=node_modules
                     """
                 }
