@@ -30,8 +30,8 @@ pipeline {
                 '''
             }
 
-             steps {
-        echo "No package.json found, skipping build step."
+            steps {
+                 echo "No package.json found, skipping build step."
             }
         }
 
