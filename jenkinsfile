@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        REACT_APP_DIR = "/var/www/Gym"  
+        SERVER_USER = "inouser"              
+        SERVER_IP = "57.155.1.178"           
+        NODE_OPTIONS = "--max_old_space_size=4096" 
+        SSH_KEY = "/var/lib/jenkins/.ssh/id_rsa"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', 
+                    credentialsId: 'SHA256:ejT1Q2KXqph9Q1uGFZiwJzBMJ07GcMlJOyj/7VtZpsk', // Replace with actual Jenkins credentials ID
+                    url: 'git@github.com:inovatrik-santhosh/santhosh.git'
+            }
+        }
+
+        // Uncomment if build is needed
+        // stage('Install Dependencies & Build') {
+        //     steps {
+        //         sh '''
+        //         cd $WORKSPACE/react
+        //         rm -rf node_modules package-lock.json
+        //         npm cache clean --force
+        //         npm install 
+        //         npm run build || { echo "Build failed!"; exit 1; }
+        //         '''
+        //     }
+        // }
+
+        stage('Deploy to Server') {
+            steps {
+                script {
+                    sh """
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} "sudo mkdir -p ${REACT_APP_DIR}"
+
+                    # Securely copy files using rsync
+                    rsync -Paz -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" $WORKSPACE/ \
+                    ${SERVER_USER}@${SERVER_IP}:${REACT_APP_DIR} --rsync-path="sudo rsync"\
+                    --exclude=test --exclude=logs --exclude=deployment-scripts --exclude=keys --exclude=node_modules
+                    """
+                }
+            }
+        }
+    }
+}
